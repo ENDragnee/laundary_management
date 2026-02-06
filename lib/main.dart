@@ -7,13 +7,15 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    MultiProvider( // <-- Change to MultiProvider
+    MultiProvider(
+      // <-- Change to MultiProvider
       providers: [
         Provider<AppDatabase>(
           create: (context) => AppDatabase(),
           dispose: (context, db) => db.close(),
         ),
-        ChangeNotifierProvider( // <-- Add ThemeManager
+        ChangeNotifierProvider(
+          // <-- Add ThemeManager
           create: (context) => ThemeManager(),
         ),
       ],
@@ -37,7 +39,6 @@ class MyApp extends StatelessWidget {
       theme: RosePineTheme.lightTheme,
       darkTheme: RosePineTheme.darkTheme,
       themeMode: themeManager.themeMode, // <-- Use the value from the manager
-
       // Router
       routerConfig: appRouter,
     );
