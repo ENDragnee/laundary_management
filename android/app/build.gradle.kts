@@ -11,6 +11,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // CORRECTION 1: Kotlin DSL syntax uses '=' and 'is' prefix for booleans
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -41,4 +43,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// CORRECTION 2: Dependencies block belongs outside the 'android' block
+dependencies {
+    // CORRECTION 3: Kotlin DSL syntax uses parentheses for dependencies
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

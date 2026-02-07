@@ -9,6 +9,7 @@ class LaundryOrders extends Table {
   DateTimeColumn get dueDate => dateTime()();
   RealColumn get totalPrice => real()();
   TextColumn get code => text().unique()();
+  IntColumn get status => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 }

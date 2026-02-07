@@ -5,18 +5,24 @@ import 'package:laundary_management/core/theme/rose_pine_theme.dart';
 import 'package:laundary_management/core/theme/theme_manager.dart'; // <-- Import
 import 'package:provider/provider.dart';
 
-void main() {
+Future<void> main() async {
+  // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Create ThemeManager and load the saved theme
+  final themeManager = ThemeManager();
+  await themeManager.loadTheme();
+
   runApp(
     MultiProvider(
-      // <-- Change to MultiProvider
       providers: [
         Provider<AppDatabase>(
           create: (context) => AppDatabase(),
           dispose: (context, db) => db.close(),
         ),
-        ChangeNotifierProvider(
-          // <-- Add ThemeManager
-          create: (context) => ThemeManager(),
+        ChangeNotifierProvider.value(
+          // Use .value since it's already created
+          value: themeManager,
         ),
       ],
       child: const MyApp(),

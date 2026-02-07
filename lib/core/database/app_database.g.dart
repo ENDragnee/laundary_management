@@ -87,6 +87,16 @@ class $LaundryOrdersTable extends LaundryOrders
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<int> status = GeneratedColumn<int>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -118,6 +128,7 @@ class $LaundryOrdersTable extends LaundryOrders
     dueDate,
     totalPrice,
     code,
+    status,
     createdAt,
     updatedAt,
   ];
@@ -190,6 +201,12 @@ class $LaundryOrdersTable extends LaundryOrders
     } else if (isInserting) {
       context.missing(_codeMeta);
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -243,6 +260,10 @@ class $LaundryOrdersTable extends LaundryOrders
         DriftSqlType.string,
         data['${effectivePrefix}code'],
       )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}status'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -268,6 +289,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   final DateTime dueDate;
   final double totalPrice;
   final String code;
+  final int status;
   final DateTime createdAt;
   final DateTime updatedAt;
   const LaundryOrder({
@@ -278,6 +300,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     required this.dueDate,
     required this.totalPrice,
     required this.code,
+    required this.status,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -291,6 +314,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     map['due_date'] = Variable<DateTime>(dueDate);
     map['total_price'] = Variable<double>(totalPrice);
     map['code'] = Variable<String>(code);
+    map['status'] = Variable<int>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -305,6 +329,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       dueDate: Value(dueDate),
       totalPrice: Value(totalPrice),
       code: Value(code),
+      status: Value(status),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -323,6 +348,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       dueDate: serializer.fromJson<DateTime>(json['dueDate']),
       totalPrice: serializer.fromJson<double>(json['totalPrice']),
       code: serializer.fromJson<String>(json['code']),
+      status: serializer.fromJson<int>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -338,6 +364,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       'dueDate': serializer.toJson<DateTime>(dueDate),
       'totalPrice': serializer.toJson<double>(totalPrice),
       'code': serializer.toJson<String>(code),
+      'status': serializer.toJson<int>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -351,6 +378,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     DateTime? dueDate,
     double? totalPrice,
     String? code,
+    int? status,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => LaundryOrder(
@@ -361,6 +389,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     dueDate: dueDate ?? this.dueDate,
     totalPrice: totalPrice ?? this.totalPrice,
     code: code ?? this.code,
+    status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -379,6 +408,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
           ? data.totalPrice.value
           : this.totalPrice,
       code: data.code.present ? data.code.value : this.code,
+      status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -394,6 +424,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
           ..write('dueDate: $dueDate, ')
           ..write('totalPrice: $totalPrice, ')
           ..write('code: $code, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -409,6 +440,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     dueDate,
     totalPrice,
     code,
+    status,
     createdAt,
     updatedAt,
   );
@@ -423,6 +455,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
           other.dueDate == this.dueDate &&
           other.totalPrice == this.totalPrice &&
           other.code == this.code &&
+          other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -435,6 +468,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   final Value<DateTime> dueDate;
   final Value<double> totalPrice;
   final Value<String> code;
+  final Value<int> status;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   const LaundryOrdersCompanion({
@@ -445,6 +479,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     this.dueDate = const Value.absent(),
     this.totalPrice = const Value.absent(),
     this.code = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
@@ -456,6 +491,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     required DateTime dueDate,
     required double totalPrice,
     required String code,
+    this.status = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
   }) : customerName = Value(customerName),
@@ -474,6 +510,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Expression<DateTime>? dueDate,
     Expression<double>? totalPrice,
     Expression<String>? code,
+    Expression<int>? status,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
   }) {
@@ -485,6 +522,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
       if (dueDate != null) 'due_date': dueDate,
       if (totalPrice != null) 'total_price': totalPrice,
       if (code != null) 'code': code,
+      if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
@@ -498,6 +536,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Value<DateTime>? dueDate,
     Value<double>? totalPrice,
     Value<String>? code,
+    Value<int>? status,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
   }) {
@@ -509,6 +548,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
       dueDate: dueDate ?? this.dueDate,
       totalPrice: totalPrice ?? this.totalPrice,
       code: code ?? this.code,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -538,6 +578,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     if (code.present) {
       map['code'] = Variable<String>(code.value);
     }
+    if (status.present) {
+      map['status'] = Variable<int>(status.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -557,6 +600,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
           ..write('dueDate: $dueDate, ')
           ..write('totalPrice: $totalPrice, ')
           ..write('code: $code, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -584,6 +628,7 @@ typedef $$LaundryOrdersTableCreateCompanionBuilder =
       required DateTime dueDate,
       required double totalPrice,
       required String code,
+      Value<int> status,
       required DateTime createdAt,
       required DateTime updatedAt,
     });
@@ -596,6 +641,7 @@ typedef $$LaundryOrdersTableUpdateCompanionBuilder =
       Value<DateTime> dueDate,
       Value<double> totalPrice,
       Value<String> code,
+      Value<int> status,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
     });
@@ -641,6 +687,11 @@ class $$LaundryOrdersTableFilterComposer
 
   ColumnFilters<String> get code => $composableBuilder(
     column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -699,6 +750,11 @@ class $$LaundryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -746,6 +802,9 @@ class $$LaundryOrdersTableAnnotationComposer
   GeneratedColumn<String> get code =>
       $composableBuilder(column: $table.code, builder: (column) => column);
 
+  GeneratedColumn<int> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -791,6 +850,7 @@ class $$LaundryOrdersTableTableManager
                 Value<DateTime> dueDate = const Value.absent(),
                 Value<double> totalPrice = const Value.absent(),
                 Value<String> code = const Value.absent(),
+                Value<int> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => LaundryOrdersCompanion(
@@ -801,6 +861,7 @@ class $$LaundryOrdersTableTableManager
                 dueDate: dueDate,
                 totalPrice: totalPrice,
                 code: code,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
@@ -813,6 +874,7 @@ class $$LaundryOrdersTableTableManager
                 required DateTime dueDate,
                 required double totalPrice,
                 required String code,
+                Value<int> status = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
               }) => LaundryOrdersCompanion.insert(
@@ -823,6 +885,7 @@ class $$LaundryOrdersTableTableManager
                 dueDate: dueDate,
                 totalPrice: totalPrice,
                 code: code,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
               ),
