@@ -1,4 +1,5 @@
-package com.example.laundary_management
+//package com.example.laundary_management
+package com.endragnee.laundary_management
 
 import io.flutter.embedding.android.FlutterActivity
 
