@@ -14,6 +14,31 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  // C R U D Operations
+
+  // READ ALL: Watch all orders, sorted by creation date
+  Stream<List<LaundryOrder>> watchAllOrders() {
+    return (select(laundryOrders)..orderBy([
+          (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+        ]))
+        .watch();
+  }
+
+  // CREATE: Add a new order
+  Future<int> addOrder(LaundryOrdersCompanion entry) {
+    return into(laundryOrders).insert(entry);
+  }
+
+  // UPDATE: Update an existing order
+  Future<bool> updateOrder(LaundryOrdersCompanion entry) {
+    return update(laundryOrders).replace(entry);
+  }
+
+  // DELETE: Delete an order by its id
+  Future<int> deleteOrder(int id) {
+    return (delete(laundryOrders)..where((tbl) => tbl.id.equals(id))).go();
+  }
 }
 
 LazyDatabase _openConnection() {
