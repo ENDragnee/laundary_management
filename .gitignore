@@ -163,3 +163,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 >>>>>>> fbb27ad (feat(init): commit version 1)
+
+.env*

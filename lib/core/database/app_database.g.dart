@@ -11,16 +11,24 @@ class $LaundryOrdersTable extends LaundryOrders
   $LaundryOrdersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
+  );
+  static const VerificationMeta _laundryIdMeta = const VerificationMeta(
+    'laundryId',
+  );
+  @override
+  late final GeneratedColumn<String> laundryId = GeneratedColumn<String>(
+    'laundry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _customerNameMeta = const VerificationMeta(
     'customerName',
@@ -40,6 +48,15 @@ class $LaundryOrdersTable extends LaundryOrders
   late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
     'phone_number',
     aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
@@ -55,17 +72,6 @@ class $LaundryOrdersTable extends LaundryOrders
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _dueDateMeta = const VerificationMeta(
-    'dueDate',
-  );
-  @override
-  late final GeneratedColumn<DateTime> dueDate = GeneratedColumn<DateTime>(
-    'due_date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
   static const VerificationMeta _totalPriceMeta = const VerificationMeta(
     'totalPrice',
   );
@@ -77,16 +83,6 @@ class $LaundryOrdersTable extends LaundryOrders
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _codeMeta = const VerificationMeta('code');
-  @override
-  late final GeneratedColumn<String> code = GeneratedColumn<String>(
-    'code',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
-  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<int> status = GeneratedColumn<int>(
@@ -96,6 +92,17 @@ class $LaundryOrdersTable extends LaundryOrders
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _dueDateMeta = const VerificationMeta(
+    'dueDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dueDate = GeneratedColumn<DateTime>(
+    'due_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -122,13 +129,14 @@ class $LaundryOrdersTable extends LaundryOrders
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    laundryId,
     customerName,
     phoneNumber,
-    clothes,
-    dueDate,
-    totalPrice,
     code,
+    clothes,
+    totalPrice,
     status,
+    dueDate,
     createdAt,
     updatedAt,
   ];
@@ -136,7 +144,7 @@ class $LaundryOrdersTable extends LaundryOrders
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'laundry_orders';
+  static const String $name = 'orders';
   @override
   VerificationContext validateIntegrity(
     Insertable<LaundryOrder> instance, {
@@ -146,6 +154,14 @@ class $LaundryOrdersTable extends LaundryOrders
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('laundry_id')) {
+      context.handle(
+        _laundryIdMeta,
+        laundryId.isAcceptableOrUnknown(data['laundry_id']!, _laundryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_laundryIdMeta);
     }
     if (data.containsKey('customer_name')) {
       context.handle(
@@ -166,32 +182,6 @@ class $LaundryOrdersTable extends LaundryOrders
           _phoneNumberMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_phoneNumberMeta);
-    }
-    if (data.containsKey('clothes')) {
-      context.handle(
-        _clothesMeta,
-        clothes.isAcceptableOrUnknown(data['clothes']!, _clothesMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_clothesMeta);
-    }
-    if (data.containsKey('due_date')) {
-      context.handle(
-        _dueDateMeta,
-        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_dueDateMeta);
-    }
-    if (data.containsKey('total_price')) {
-      context.handle(
-        _totalPriceMeta,
-        totalPrice.isAcceptableOrUnknown(data['total_price']!, _totalPriceMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_totalPriceMeta);
     }
     if (data.containsKey('code')) {
       context.handle(
@@ -201,11 +191,35 @@ class $LaundryOrdersTable extends LaundryOrders
     } else if (isInserting) {
       context.missing(_codeMeta);
     }
+    if (data.containsKey('clothes')) {
+      context.handle(
+        _clothesMeta,
+        clothes.isAcceptableOrUnknown(data['clothes']!, _clothesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_clothesMeta);
+    }
+    if (data.containsKey('total_price')) {
+      context.handle(
+        _totalPriceMeta,
+        totalPrice.isAcceptableOrUnknown(data['total_price']!, _totalPriceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalPriceMeta);
+    }
     if (data.containsKey('status')) {
       context.handle(
         _statusMeta,
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(
+        _dueDateMeta,
+        dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dueDateMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -233,8 +247,12 @@ class $LaundryOrdersTable extends LaundryOrders
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LaundryOrder(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
+      )!,
+      laundryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}laundry_id'],
       )!,
       customerName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -243,26 +261,26 @@ class $LaundryOrdersTable extends LaundryOrders
       phoneNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}phone_number'],
+      ),
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
       )!,
       clothes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}clothes'],
       )!,
-      dueDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}due_date'],
-      )!,
       totalPrice: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}total_price'],
       )!,
-      code: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}code'],
-      )!,
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}status'],
+      )!,
+      dueDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}due_date'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -282,39 +300,44 @@ class $LaundryOrdersTable extends LaundryOrders
 }
 
 class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
-  final int id;
+  final String id;
+  final String laundryId;
   final String customerName;
-  final String phoneNumber;
-  final String clothes;
-  final DateTime dueDate;
-  final double totalPrice;
+  final String? phoneNumber;
   final String code;
+  final String clothes;
+  final double totalPrice;
   final int status;
+  final DateTime dueDate;
   final DateTime createdAt;
   final DateTime updatedAt;
   const LaundryOrder({
     required this.id,
+    required this.laundryId,
     required this.customerName,
-    required this.phoneNumber,
-    required this.clothes,
-    required this.dueDate,
-    required this.totalPrice,
+    this.phoneNumber,
     required this.code,
+    required this.clothes,
+    required this.totalPrice,
     required this.status,
+    required this.dueDate,
     required this.createdAt,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
+    map['laundry_id'] = Variable<String>(laundryId);
     map['customer_name'] = Variable<String>(customerName);
-    map['phone_number'] = Variable<String>(phoneNumber);
-    map['clothes'] = Variable<String>(clothes);
-    map['due_date'] = Variable<DateTime>(dueDate);
-    map['total_price'] = Variable<double>(totalPrice);
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
     map['code'] = Variable<String>(code);
+    map['clothes'] = Variable<String>(clothes);
+    map['total_price'] = Variable<double>(totalPrice);
     map['status'] = Variable<int>(status);
+    map['due_date'] = Variable<DateTime>(dueDate);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -323,13 +346,16 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   LaundryOrdersCompanion toCompanion(bool nullToAbsent) {
     return LaundryOrdersCompanion(
       id: Value(id),
+      laundryId: Value(laundryId),
       customerName: Value(customerName),
-      phoneNumber: Value(phoneNumber),
-      clothes: Value(clothes),
-      dueDate: Value(dueDate),
-      totalPrice: Value(totalPrice),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
       code: Value(code),
+      clothes: Value(clothes),
+      totalPrice: Value(totalPrice),
       status: Value(status),
+      dueDate: Value(dueDate),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -341,14 +367,15 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LaundryOrder(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
+      laundryId: serializer.fromJson<String>(json['laundryId']),
       customerName: serializer.fromJson<String>(json['customerName']),
-      phoneNumber: serializer.fromJson<String>(json['phoneNumber']),
-      clothes: serializer.fromJson<String>(json['clothes']),
-      dueDate: serializer.fromJson<DateTime>(json['dueDate']),
-      totalPrice: serializer.fromJson<double>(json['totalPrice']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
       code: serializer.fromJson<String>(json['code']),
+      clothes: serializer.fromJson<String>(json['clothes']),
+      totalPrice: serializer.fromJson<double>(json['totalPrice']),
       status: serializer.fromJson<int>(json['status']),
+      dueDate: serializer.fromJson<DateTime>(json['dueDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -357,58 +384,62 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
+      'laundryId': serializer.toJson<String>(laundryId),
       'customerName': serializer.toJson<String>(customerName),
-      'phoneNumber': serializer.toJson<String>(phoneNumber),
-      'clothes': serializer.toJson<String>(clothes),
-      'dueDate': serializer.toJson<DateTime>(dueDate),
-      'totalPrice': serializer.toJson<double>(totalPrice),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
       'code': serializer.toJson<String>(code),
+      'clothes': serializer.toJson<String>(clothes),
+      'totalPrice': serializer.toJson<double>(totalPrice),
       'status': serializer.toJson<int>(status),
+      'dueDate': serializer.toJson<DateTime>(dueDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
   LaundryOrder copyWith({
-    int? id,
+    String? id,
+    String? laundryId,
     String? customerName,
-    String? phoneNumber,
-    String? clothes,
-    DateTime? dueDate,
-    double? totalPrice,
+    Value<String?> phoneNumber = const Value.absent(),
     String? code,
+    String? clothes,
+    double? totalPrice,
     int? status,
+    DateTime? dueDate,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => LaundryOrder(
     id: id ?? this.id,
+    laundryId: laundryId ?? this.laundryId,
     customerName: customerName ?? this.customerName,
-    phoneNumber: phoneNumber ?? this.phoneNumber,
-    clothes: clothes ?? this.clothes,
-    dueDate: dueDate ?? this.dueDate,
-    totalPrice: totalPrice ?? this.totalPrice,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
     code: code ?? this.code,
+    clothes: clothes ?? this.clothes,
+    totalPrice: totalPrice ?? this.totalPrice,
     status: status ?? this.status,
+    dueDate: dueDate ?? this.dueDate,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   LaundryOrder copyWithCompanion(LaundryOrdersCompanion data) {
     return LaundryOrder(
       id: data.id.present ? data.id.value : this.id,
+      laundryId: data.laundryId.present ? data.laundryId.value : this.laundryId,
       customerName: data.customerName.present
           ? data.customerName.value
           : this.customerName,
       phoneNumber: data.phoneNumber.present
           ? data.phoneNumber.value
           : this.phoneNumber,
+      code: data.code.present ? data.code.value : this.code,
       clothes: data.clothes.present ? data.clothes.value : this.clothes,
-      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       totalPrice: data.totalPrice.present
           ? data.totalPrice.value
           : this.totalPrice,
-      code: data.code.present ? data.code.value : this.code,
       status: data.status.present ? data.status.value : this.status,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -418,13 +449,14 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   String toString() {
     return (StringBuffer('LaundryOrder(')
           ..write('id: $id, ')
+          ..write('laundryId: $laundryId, ')
           ..write('customerName: $customerName, ')
           ..write('phoneNumber: $phoneNumber, ')
-          ..write('clothes: $clothes, ')
-          ..write('dueDate: $dueDate, ')
-          ..write('totalPrice: $totalPrice, ')
           ..write('code: $code, ')
+          ..write('clothes: $clothes, ')
+          ..write('totalPrice: $totalPrice, ')
           ..write('status: $status, ')
+          ..write('dueDate: $dueDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -434,13 +466,14 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   @override
   int get hashCode => Object.hash(
     id,
+    laundryId,
     customerName,
     phoneNumber,
-    clothes,
-    dueDate,
-    totalPrice,
     code,
+    clothes,
+    totalPrice,
     status,
+    dueDate,
     createdAt,
     updatedAt,
   );
@@ -449,108 +482,123 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       identical(this, other) ||
       (other is LaundryOrder &&
           other.id == this.id &&
+          other.laundryId == this.laundryId &&
           other.customerName == this.customerName &&
           other.phoneNumber == this.phoneNumber &&
-          other.clothes == this.clothes &&
-          other.dueDate == this.dueDate &&
-          other.totalPrice == this.totalPrice &&
           other.code == this.code &&
+          other.clothes == this.clothes &&
+          other.totalPrice == this.totalPrice &&
           other.status == this.status &&
+          other.dueDate == this.dueDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
-  final Value<int> id;
+  final Value<String> id;
+  final Value<String> laundryId;
   final Value<String> customerName;
-  final Value<String> phoneNumber;
-  final Value<String> clothes;
-  final Value<DateTime> dueDate;
-  final Value<double> totalPrice;
+  final Value<String?> phoneNumber;
   final Value<String> code;
+  final Value<String> clothes;
+  final Value<double> totalPrice;
   final Value<int> status;
+  final Value<DateTime> dueDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<int> rowid;
   const LaundryOrdersCompanion({
     this.id = const Value.absent(),
+    this.laundryId = const Value.absent(),
     this.customerName = const Value.absent(),
     this.phoneNumber = const Value.absent(),
-    this.clothes = const Value.absent(),
-    this.dueDate = const Value.absent(),
-    this.totalPrice = const Value.absent(),
     this.code = const Value.absent(),
+    this.clothes = const Value.absent(),
+    this.totalPrice = const Value.absent(),
     this.status = const Value.absent(),
+    this.dueDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   LaundryOrdersCompanion.insert({
     this.id = const Value.absent(),
+    required String laundryId,
     required String customerName,
-    required String phoneNumber,
-    required String clothes,
-    required DateTime dueDate,
-    required double totalPrice,
+    this.phoneNumber = const Value.absent(),
     required String code,
+    required String clothes,
+    required double totalPrice,
     this.status = const Value.absent(),
+    required DateTime dueDate,
     required DateTime createdAt,
     required DateTime updatedAt,
-  }) : customerName = Value(customerName),
-       phoneNumber = Value(phoneNumber),
-       clothes = Value(clothes),
-       dueDate = Value(dueDate),
-       totalPrice = Value(totalPrice),
+    this.rowid = const Value.absent(),
+  }) : laundryId = Value(laundryId),
+       customerName = Value(customerName),
        code = Value(code),
+       clothes = Value(clothes),
+       totalPrice = Value(totalPrice),
+       dueDate = Value(dueDate),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<LaundryOrder> custom({
-    Expression<int>? id,
+    Expression<String>? id,
+    Expression<String>? laundryId,
     Expression<String>? customerName,
     Expression<String>? phoneNumber,
-    Expression<String>? clothes,
-    Expression<DateTime>? dueDate,
-    Expression<double>? totalPrice,
     Expression<String>? code,
+    Expression<String>? clothes,
+    Expression<double>? totalPrice,
     Expression<int>? status,
+    Expression<DateTime>? dueDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (laundryId != null) 'laundry_id': laundryId,
       if (customerName != null) 'customer_name': customerName,
       if (phoneNumber != null) 'phone_number': phoneNumber,
-      if (clothes != null) 'clothes': clothes,
-      if (dueDate != null) 'due_date': dueDate,
-      if (totalPrice != null) 'total_price': totalPrice,
       if (code != null) 'code': code,
+      if (clothes != null) 'clothes': clothes,
+      if (totalPrice != null) 'total_price': totalPrice,
       if (status != null) 'status': status,
+      if (dueDate != null) 'due_date': dueDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   LaundryOrdersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
+    Value<String>? laundryId,
     Value<String>? customerName,
-    Value<String>? phoneNumber,
-    Value<String>? clothes,
-    Value<DateTime>? dueDate,
-    Value<double>? totalPrice,
+    Value<String?>? phoneNumber,
     Value<String>? code,
+    Value<String>? clothes,
+    Value<double>? totalPrice,
     Value<int>? status,
+    Value<DateTime>? dueDate,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<int>? rowid,
   }) {
     return LaundryOrdersCompanion(
       id: id ?? this.id,
+      laundryId: laundryId ?? this.laundryId,
       customerName: customerName ?? this.customerName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      clothes: clothes ?? this.clothes,
-      dueDate: dueDate ?? this.dueDate,
-      totalPrice: totalPrice ?? this.totalPrice,
       code: code ?? this.code,
+      clothes: clothes ?? this.clothes,
+      totalPrice: totalPrice ?? this.totalPrice,
       status: status ?? this.status,
+      dueDate: dueDate ?? this.dueDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -558,7 +606,10 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
+    }
+    if (laundryId.present) {
+      map['laundry_id'] = Variable<String>(laundryId.value);
     }
     if (customerName.present) {
       map['customer_name'] = Variable<String>(customerName.value);
@@ -566,26 +617,29 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     if (phoneNumber.present) {
       map['phone_number'] = Variable<String>(phoneNumber.value);
     }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
     if (clothes.present) {
       map['clothes'] = Variable<String>(clothes.value);
-    }
-    if (dueDate.present) {
-      map['due_date'] = Variable<DateTime>(dueDate.value);
     }
     if (totalPrice.present) {
       map['total_price'] = Variable<double>(totalPrice.value);
     }
-    if (code.present) {
-      map['code'] = Variable<String>(code.value);
-    }
     if (status.present) {
       map['status'] = Variable<int>(status.value);
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<DateTime>(dueDate.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -594,15 +648,17 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   String toString() {
     return (StringBuffer('LaundryOrdersCompanion(')
           ..write('id: $id, ')
+          ..write('laundryId: $laundryId, ')
           ..write('customerName: $customerName, ')
           ..write('phoneNumber: $phoneNumber, ')
-          ..write('clothes: $clothes, ')
-          ..write('dueDate: $dueDate, ')
-          ..write('totalPrice: $totalPrice, ')
           ..write('code: $code, ')
+          ..write('clothes: $clothes, ')
+          ..write('totalPrice: $totalPrice, ')
           ..write('status: $status, ')
+          ..write('dueDate: $dueDate, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -621,29 +677,33 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 
 typedef $$LaundryOrdersTableCreateCompanionBuilder =
     LaundryOrdersCompanion Function({
-      Value<int> id,
+      Value<String> id,
+      required String laundryId,
       required String customerName,
-      required String phoneNumber,
-      required String clothes,
-      required DateTime dueDate,
-      required double totalPrice,
+      Value<String?> phoneNumber,
       required String code,
+      required String clothes,
+      required double totalPrice,
       Value<int> status,
+      required DateTime dueDate,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<int> rowid,
     });
 typedef $$LaundryOrdersTableUpdateCompanionBuilder =
     LaundryOrdersCompanion Function({
-      Value<int> id,
+      Value<String> id,
+      Value<String> laundryId,
       Value<String> customerName,
-      Value<String> phoneNumber,
-      Value<String> clothes,
-      Value<DateTime> dueDate,
-      Value<double> totalPrice,
+      Value<String?> phoneNumber,
       Value<String> code,
+      Value<String> clothes,
+      Value<double> totalPrice,
       Value<int> status,
+      Value<DateTime> dueDate,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<int> rowid,
     });
 
 class $$LaundryOrdersTableFilterComposer
@@ -655,8 +715,13 @@ class $$LaundryOrdersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get laundryId => $composableBuilder(
+    column: $table.laundryId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -670,13 +735,13 @@ class $$LaundryOrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get clothes => $composableBuilder(
-    column: $table.clothes,
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get dueDate => $composableBuilder(
-    column: $table.dueDate,
+  ColumnFilters<String> get clothes => $composableBuilder(
+    column: $table.clothes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -685,13 +750,13 @@ class $$LaundryOrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get code => $composableBuilder(
-    column: $table.code,
+  ColumnFilters<int> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get status => $composableBuilder(
-    column: $table.status,
+  ColumnFilters<DateTime> get dueDate => $composableBuilder(
+    column: $table.dueDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -715,8 +780,13 @@ class $$LaundryOrdersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get laundryId => $composableBuilder(
+    column: $table.laundryId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -730,13 +800,13 @@ class $$LaundryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get clothes => $composableBuilder(
-    column: $table.clothes,
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get dueDate => $composableBuilder(
-    column: $table.dueDate,
+  ColumnOrderings<String> get clothes => $composableBuilder(
+    column: $table.clothes,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -745,13 +815,13 @@ class $$LaundryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get code => $composableBuilder(
-    column: $table.code,
+  ColumnOrderings<int> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get status => $composableBuilder(
-    column: $table.status,
+  ColumnOrderings<DateTime> get dueDate => $composableBuilder(
+    column: $table.dueDate,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -775,8 +845,11 @@ class $$LaundryOrdersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get laundryId =>
+      $composableBuilder(column: $table.laundryId, builder: (column) => column);
 
   GeneratedColumn<String> get customerName => $composableBuilder(
     column: $table.customerName,
@@ -788,22 +861,22 @@ class $$LaundryOrdersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
   GeneratedColumn<String> get clothes =>
       $composableBuilder(column: $table.clothes, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get dueDate =>
-      $composableBuilder(column: $table.dueDate, builder: (column) => column);
 
   GeneratedColumn<double> get totalPrice => $composableBuilder(
     column: $table.totalPrice,
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get code =>
-      $composableBuilder(column: $table.code, builder: (column) => column);
-
   GeneratedColumn<int> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -843,51 +916,59 @@ class $$LaundryOrdersTableTableManager
               $$LaundryOrdersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> laundryId = const Value.absent(),
                 Value<String> customerName = const Value.absent(),
-                Value<String> phoneNumber = const Value.absent(),
-                Value<String> clothes = const Value.absent(),
-                Value<DateTime> dueDate = const Value.absent(),
-                Value<double> totalPrice = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
                 Value<String> code = const Value.absent(),
+                Value<String> clothes = const Value.absent(),
+                Value<double> totalPrice = const Value.absent(),
                 Value<int> status = const Value.absent(),
+                Value<DateTime> dueDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => LaundryOrdersCompanion(
                 id: id,
+                laundryId: laundryId,
                 customerName: customerName,
                 phoneNumber: phoneNumber,
-                clothes: clothes,
-                dueDate: dueDate,
-                totalPrice: totalPrice,
                 code: code,
+                clothes: clothes,
+                totalPrice: totalPrice,
                 status: status,
+                dueDate: dueDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                required String laundryId,
                 required String customerName,
-                required String phoneNumber,
-                required String clothes,
-                required DateTime dueDate,
-                required double totalPrice,
+                Value<String?> phoneNumber = const Value.absent(),
                 required String code,
+                required String clothes,
+                required double totalPrice,
                 Value<int> status = const Value.absent(),
+                required DateTime dueDate,
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
               }) => LaundryOrdersCompanion.insert(
                 id: id,
+                laundryId: laundryId,
                 customerName: customerName,
                 phoneNumber: phoneNumber,
-                clothes: clothes,
-                dueDate: dueDate,
-                totalPrice: totalPrice,
                 code: code,
+                clothes: clothes,
+                totalPrice: totalPrice,
                 status: status,
+                dueDate: dueDate,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -48,6 +48,10 @@ dependencies:
   # For date formatting
   intl: ^0.19.0
   rxdart: ^0.28.0
+  supabase_flutter: ^2.0.0
+  powersync: ^1.6.0
+  drift_sqlite_async: ^0.2.0
+  flutter_dotenv: ^5.2.1
 
   # For dependency injection/providing the database
   provider: ^6.1.2
@@ -76,6 +80,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

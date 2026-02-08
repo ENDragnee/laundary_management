@@ -7,6 +7,7 @@ import 'package:laundary_management/core/constants/order_status.dart';
 import 'package:laundary_management/core/database/app_database.dart';
 import 'package:laundary_management/features/laundry_order/presentation/models/clothing_item.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for User ID
 import 'package:uuid/uuid.dart';
 
 class OrderFormScreen extends StatefulWidget {
@@ -81,9 +82,23 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       final messenger = ScaffoldMessenger.of(context);
       final router = GoRouter.of(context);
 
+      // 1. Get Current User ID (Required for Sync)
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Error: You must be logged in.')),
+        );
+        return;
+      }
+
+      // 2. Determine Order ID (UUID)
+      final String orderId = _isEditing ? widget.order!.id : const Uuid().v4();
+
       final now = DateTime.now();
+
       final orderCompanion = LaundryOrdersCompanion(
-        id: _isEditing ? d.Value(widget.order!.id) : const d.Value.absent(),
+        id: d.Value(orderId),
+        laundryId: d.Value(userId), // Link order to user
         customerName: d.Value(_nameController.text),
         phoneNumber: d.Value(_phoneController.text),
         clothes: d.Value(ClothingItem.encode(_clothingItems)),
@@ -116,9 +131,22 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         router.pop();
       } catch (error) {
         if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(content: Text('Failed to save order: $error')),
-        );
+
+        // Handle Trial Limit Error specifically
+        if (error.toString().contains('Trial Limit Reached')) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Trial limit reached. Please upgrade to add more orders.',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          messenger.showSnackBar(
+            SnackBar(content: Text('Failed to save order: $error')),
+          );
+        }
       }
     }
   }
@@ -141,15 +169,24 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               final router = GoRouter.of(context);
               final dialogNavigator = Navigator.of(ctx);
 
-              await database.deleteOrder(widget.order!.id);
+              try {
+                // ID is now String, which matches our new Schema
+                await database.deleteOrder(widget.order!.id);
 
-              if (!mounted) return;
+                if (!mounted) return;
 
-              dialogNavigator.pop();
-              router.pop();
-              messenger.showSnackBar(
-                const SnackBar(content: Text('Order deleted successfully!')),
-              );
+                dialogNavigator.pop();
+                router.pop();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Order deleted successfully!')),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                dialogNavigator.pop();
+                messenger.showSnackBar(
+                  SnackBar(content: Text('Delete failed: $e')),
+                );
+              }
             },
             child: Text(
               'Delete',
@@ -161,6 +198,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     );
   }
 
+  // ... (Helper methods for clothes: _addClothingItem, _removeClothingItem remain same)
   void _addClothingItem() {
     setState(() {
       _clothingItems.add(ClothingItem());
