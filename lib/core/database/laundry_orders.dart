@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
+import 'package:laundary_management/core/constants/order_status.dart';
 
 @DataClassName('LaundryOrder')
 class LaundryOrders extends Table {
@@ -13,9 +14,10 @@ class LaundryOrders extends Table {
   TextColumn get code => text()();
   TextColumn get clothes => text()();
   RealColumn get totalPrice => real().named('total_price')();
-  IntColumn get status => integer().withDefault(const Constant(0))();
 
-  // CHANGE: Use TextColumn for dates to match ISO8601 Supabase format
+  TextColumn get status =>
+      textEnum<OrderStatus>().withDefault(Constant(OrderStatus.pending.name))();
+
   TextColumn get dueDate => text().named('due_date')();
   TextColumn get createdAt => text().named('created_at')();
   TextColumn get updatedAt => text().named('updated_at')();

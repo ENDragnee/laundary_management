@@ -83,16 +83,16 @@ class $LaundryOrdersTable extends LaundryOrders
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
-  late final GeneratedColumn<int> status = GeneratedColumn<int>(
-    'status',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
+  late final GeneratedColumnWithTypeConverter<OrderStatus, String> status =
+      GeneratedColumn<String>(
+        'status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant(OrderStatus.pending.name),
+      ).withConverter<OrderStatus>($LaundryOrdersTable.$converterstatus);
   static const VerificationMeta _dueDateMeta = const VerificationMeta(
     'dueDate',
   );
@@ -207,12 +207,6 @@ class $LaundryOrdersTable extends LaundryOrders
     } else if (isInserting) {
       context.missing(_totalPriceMeta);
     }
-    if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
-    }
     if (data.containsKey('due_date')) {
       context.handle(
         _dueDateMeta,
@@ -274,10 +268,12 @@ class $LaundryOrdersTable extends LaundryOrders
         DriftSqlType.double,
         data['${effectivePrefix}total_price'],
       )!,
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}status'],
-      )!,
+      status: $LaundryOrdersTable.$converterstatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}status'],
+        )!,
+      ),
       dueDate: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}due_date'],
@@ -297,6 +293,9 @@ class $LaundryOrdersTable extends LaundryOrders
   $LaundryOrdersTable createAlias(String alias) {
     return $LaundryOrdersTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<OrderStatus, String, String> $converterstatus =
+      const EnumNameConverter<OrderStatus>(OrderStatus.values);
 }
 
 class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
@@ -307,7 +306,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   final String code;
   final String clothes;
   final double totalPrice;
-  final int status;
+  final OrderStatus status;
   final String dueDate;
   final String createdAt;
   final String updatedAt;
@@ -336,7 +335,11 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     map['code'] = Variable<String>(code);
     map['clothes'] = Variable<String>(clothes);
     map['total_price'] = Variable<double>(totalPrice);
-    map['status'] = Variable<int>(status);
+    {
+      map['status'] = Variable<String>(
+        $LaundryOrdersTable.$converterstatus.toSql(status),
+      );
+    }
     map['due_date'] = Variable<String>(dueDate);
     map['created_at'] = Variable<String>(createdAt);
     map['updated_at'] = Variable<String>(updatedAt);
@@ -374,7 +377,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       code: serializer.fromJson<String>(json['code']),
       clothes: serializer.fromJson<String>(json['clothes']),
       totalPrice: serializer.fromJson<double>(json['totalPrice']),
-      status: serializer.fromJson<int>(json['status']),
+      status: $LaundryOrdersTable.$converterstatus.fromJson(
+        serializer.fromJson<String>(json['status']),
+      ),
       dueDate: serializer.fromJson<String>(json['dueDate']),
       createdAt: serializer.fromJson<String>(json['createdAt']),
       updatedAt: serializer.fromJson<String>(json['updatedAt']),
@@ -391,7 +396,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       'code': serializer.toJson<String>(code),
       'clothes': serializer.toJson<String>(clothes),
       'totalPrice': serializer.toJson<double>(totalPrice),
-      'status': serializer.toJson<int>(status),
+      'status': serializer.toJson<String>(
+        $LaundryOrdersTable.$converterstatus.toJson(status),
+      ),
       'dueDate': serializer.toJson<String>(dueDate),
       'createdAt': serializer.toJson<String>(createdAt),
       'updatedAt': serializer.toJson<String>(updatedAt),
@@ -406,7 +413,7 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     String? code,
     String? clothes,
     double? totalPrice,
-    int? status,
+    OrderStatus? status,
     String? dueDate,
     String? createdAt,
     String? updatedAt,
@@ -502,7 +509,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   final Value<String> code;
   final Value<String> clothes;
   final Value<double> totalPrice;
-  final Value<int> status;
+  final Value<OrderStatus> status;
   final Value<String> dueDate;
   final Value<String> createdAt;
   final Value<String> updatedAt;
@@ -550,7 +557,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Expression<String>? code,
     Expression<String>? clothes,
     Expression<double>? totalPrice,
-    Expression<int>? status,
+    Expression<String>? status,
     Expression<String>? dueDate,
     Expression<String>? createdAt,
     Expression<String>? updatedAt,
@@ -580,7 +587,7 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Value<String>? code,
     Value<String>? clothes,
     Value<double>? totalPrice,
-    Value<int>? status,
+    Value<OrderStatus>? status,
     Value<String>? dueDate,
     Value<String>? createdAt,
     Value<String>? updatedAt,
@@ -627,7 +634,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
       map['total_price'] = Variable<double>(totalPrice.value);
     }
     if (status.present) {
-      map['status'] = Variable<int>(status.value);
+      map['status'] = Variable<String>(
+        $LaundryOrdersTable.$converterstatus.toSql(status.value),
+      );
     }
     if (dueDate.present) {
       map['due_date'] = Variable<String>(dueDate.value);
@@ -1099,7 +1108,7 @@ typedef $$LaundryOrdersTableCreateCompanionBuilder =
       required String code,
       required String clothes,
       required double totalPrice,
-      Value<int> status,
+      Value<OrderStatus> status,
       required String dueDate,
       required String createdAt,
       required String updatedAt,
@@ -1114,7 +1123,7 @@ typedef $$LaundryOrdersTableUpdateCompanionBuilder =
       Value<String> code,
       Value<String> clothes,
       Value<double> totalPrice,
-      Value<int> status,
+      Value<OrderStatus> status,
       Value<String> dueDate,
       Value<String> createdAt,
       Value<String> updatedAt,
@@ -1165,10 +1174,11 @@ class $$LaundryOrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<OrderStatus, OrderStatus, String> get status =>
+      $composableBuilder(
+        column: $table.status,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<String> get dueDate => $composableBuilder(
     column: $table.dueDate,
@@ -1230,7 +1240,7 @@ class $$LaundryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get status => $composableBuilder(
+  ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
   );
@@ -1287,7 +1297,7 @@ class $$LaundryOrdersTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get status =>
+  GeneratedColumnWithTypeConverter<OrderStatus, String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
   GeneratedColumn<String> get dueDate =>
@@ -1338,7 +1348,7 @@ class $$LaundryOrdersTableTableManager
                 Value<String> code = const Value.absent(),
                 Value<String> clothes = const Value.absent(),
                 Value<double> totalPrice = const Value.absent(),
-                Value<int> status = const Value.absent(),
+                Value<OrderStatus> status = const Value.absent(),
                 Value<String> dueDate = const Value.absent(),
                 Value<String> createdAt = const Value.absent(),
                 Value<String> updatedAt = const Value.absent(),
@@ -1366,7 +1376,7 @@ class $$LaundryOrdersTableTableManager
                 required String code,
                 required String clothes,
                 required double totalPrice,
-                Value<int> status = const Value.absent(),
+                Value<OrderStatus> status = const Value.absent(),
                 required String dueDate,
                 required String createdAt,
                 required String updatedAt,

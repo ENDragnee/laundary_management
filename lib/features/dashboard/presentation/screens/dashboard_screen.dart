@@ -16,13 +16,13 @@ class DashboardScreen extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final database = context.read<AppDatabase>();
     final powersync = context.read<ps.PowerSyncDatabase>();
+    final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
       drawer: const UserProfileDrawer(),
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
-          // Sync Status Indicator
           StreamBuilder<ps.SyncStatus>(
             stream: powersync.statusStream,
             builder: (context, snapshot) {
@@ -88,37 +88,47 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: StreamBuilder<List<LaundryOrder>>(
-        stream: database.watchAllOrders(),
-        builder: (context, snapshot) {
-          final orders = snapshot.data ?? [];
+      // We wrap the list in a StreamBuilder to get the User Tier first
+      body: StreamBuilder<Laundry?>(
+        stream: (database.select(
+          database.laundries,
+        )..where((t) => t.id.equals(user?.id ?? ''))).watchSingleOrNull(),
+        builder: (context, profileSnapshot) {
+          final tier = profileSnapshot.data?.tier ?? 'TRIAL';
 
-          if (orders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.local_laundry_service_outlined,
-                    size: 64,
-                    color: Theme.of(context).disabledColor,
+          return StreamBuilder<List<LaundryOrder>>(
+            stream: database.watchAllOrders(),
+            builder: (context, snapshot) {
+              final orders = snapshot.data ?? [];
+
+              if (orders.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.local_laundry_service_outlined,
+                        size: 64,
+                        color: Theme.of(context).disabledColor,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('No laundry orders yet.'),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  const Text('No laundry orders yet.'),
-                ],
-              ),
-            );
-          }
+                );
+              }
 
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 80),
-            itemCount: orders.length,
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return OrderListItem(
-                order: order,
-                onTap: () => context.push('/order_form', extra: order),
-                onEdit: () => context.push('/order_form', extra: order),
+              return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 80),
+                itemCount: orders.length,
+                itemBuilder: (context, index) {
+                  final order = orders[index];
+                  return OrderListItem(
+                    order: order,
+                    userTier: tier, // Pass tier to the item card
+                    onTap: () => context.push('/order_form', extra: order),
+                  );
+                },
               );
             },
           );
@@ -166,7 +176,6 @@ class UserProfileDrawer extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          // This header reactively listens for changes to the user's profile
           StreamBuilder<Laundry?>(
             stream: (database.select(
               database.laundries,
@@ -199,10 +208,13 @@ class UserProfileDrawer extends StatelessWidget {
                 ),
                 accountEmail: Row(
                   children: [
-                    Text(
-                      '$email   ●   ',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    Expanded(
+                      child: Text(
+                        email,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
@@ -219,7 +231,7 @@ class UserProfileDrawer extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 10,
                         ),
                       ),
                     ),
@@ -233,7 +245,6 @@ class UserProfileDrawer extends StatelessWidget {
             title: const Text('Profile Settings'),
             onTap: () {
               Navigator.pop(context);
-              // Navigate to the onboarding screen to allow editing
               context.push('/onboarding');
             },
           ),

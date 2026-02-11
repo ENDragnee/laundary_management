@@ -27,6 +27,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   late OrderStatus _status;
   late List<ClothingItem> _clothingItems;
   bool _hasChanges = false;
+  bool _isReadOnly = false; // Tracks if Trial user is viewing existing order
 
   bool get _isEditing => widget.order != null;
 
@@ -40,14 +41,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       text: order?.totalPrice.toString() ?? '0.0',
     );
 
-    // FIX: Parse the String from DB into a DateTime object for the UI
     _dueDate = order != null
         ? DateTime.parse(order.dueDate)
         : DateTime.now().add(const Duration(days: 3));
 
-    _status = order != null
-        ? OrderStatus.values[order.status]
-        : OrderStatus.pending;
+    _status = order?.status ?? OrderStatus.pending;
+
     _clothingItems = order != null
         ? ClothingItem.decode(order.clothes)
         : [ClothingItem()];
@@ -55,6 +54,26 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _nameController.addListener(() => _hasChanges = true);
     _phoneController.addListener(() => _hasChanges = true);
     _priceController.addListener(() => _hasChanges = true);
+
+    // Check permissions on load
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    final database = context.read<AppDatabase>();
+    if (user == null) return;
+
+    final profile = await (database.select(
+      database.laundries,
+    )..where((t) => t.id.equals(user.id))).getSingleOrNull();
+
+    if (mounted) {
+      setState(() {
+        // If user is TRIAL and viewing an EXISTING order, set to Read Only
+        _isReadOnly = (profile?.tier.toUpperCase() == 'TRIAL') && _isEditing;
+      });
+    }
   }
 
   @override
@@ -66,10 +85,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
   }
 
   Future<void> _selectDueDate(BuildContext context) async {
+    if (_isReadOnly) return;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _dueDate,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime(2101),
     );
     if (!mounted) return;
@@ -101,14 +122,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       final orderCompanion = LaundryOrdersCompanion(
         id: d.Value(orderId),
         laundryId: d.Value(userId),
-        customerName: d.Value(_nameController.text),
-        phoneNumber: d.Value(_phoneController.text),
+        customerName: d.Value(_nameController.text.trim()),
+        phoneNumber: d.Value(_phoneController.text.trim()),
         clothes: d.Value(ClothingItem.encode(_clothingItems)),
         totalPrice: d.Value(double.tryParse(_priceController.text) ?? 0.0),
-
-        // FIX: Convert DateTime objects to ISO8601 Strings for the Database
         dueDate: d.Value(_dueDate.toIso8601String()),
-        status: d.Value(_status.index),
+        status: d.Value(_status),
         code: _isEditing
             ? d.Value(widget.order!.code)
             : d.Value(const Uuid().v4().substring(0, 6).toUpperCase()),
@@ -137,9 +156,21 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         router.pop();
       } catch (error) {
         if (!mounted) return;
-        messenger.showSnackBar(
-          SnackBar(content: Text('Failed to save order: $error')),
-        );
+
+        if (error.toString().contains('Trial Limit Reached')) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Trial limit reached. Please upgrade to add more orders.',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          messenger.showSnackBar(
+            SnackBar(content: Text('Failed to save order: $error')),
+          );
+        }
       }
     }
   }
@@ -197,8 +228,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return PopScope(
-      canPop: !_hasChanges,
+      canPop: !_hasChanges || _isReadOnly,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         final shouldPop = await showDialog<bool>(
@@ -221,13 +254,20 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         );
         if (!context.mounted) return;
-        if (shouldPop ?? false) context.pop();
+        if (shouldPop ?? false) {
+          context.pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(_isEditing ? 'Edit Order' : 'New Order'),
+          title: Text(
+            _isEditing
+                ? (_isReadOnly ? 'View Order' : 'Edit Order')
+                : 'New Order',
+          ),
           actions: [
-            if (_isEditing)
+            // Only show delete if NOT read only
+            if (_isEditing && !_isReadOnly)
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 onPressed: _deleteOrder,
@@ -245,12 +285,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                        color: theme.colorScheme.outlineVariant,
                       ),
                     ),
                     child: Row(
@@ -261,7 +299,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                           children: [
                             Text(
                               'Order Code',
-                              style: Theme.of(context).textTheme.labelSmall,
+                              style: theme.textTheme.labelSmall,
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -270,7 +308,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.5,
-                                color: Theme.of(context).primaryColor,
+                                color: theme.primaryColor,
                               ),
                             ),
                           ],
@@ -293,28 +331,38 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                 ],
                 TextFormField(
                   controller: _nameController,
+                  enabled: !_isReadOnly,
                   decoration: const InputDecoration(
                     labelText: 'Customer Name',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) =>
-                      value!.trim().isEmpty ? 'Please enter a name' : null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a name';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _phoneController,
+                  enabled: !_isReadOnly,
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
-                  validator: (value) => value!.trim().isEmpty
-                      ? 'Please enter a phone number'
-                      : null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a phone number';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _priceController,
+                  enabled: !_isReadOnly,
                   decoration: const InputDecoration(
                     labelText: 'Total Price',
                     suffixText: 'ETB',
@@ -324,17 +372,21 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     decimal: true,
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty)
+                    if (value == null || value.isEmpty) {
                       return 'Please enter a price';
-                    if (double.tryParse(value) == null)
+                    }
+                    if (double.tryParse(value) == null) {
                       return 'Please enter a valid number';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Clothes',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 ..._clothingItems.asMap().entries.map((entry) {
                   int idx = entry.key;
@@ -347,6 +399,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                           flex: 3,
                           child: TextFormField(
                             initialValue: item.name,
+                            enabled: !_isReadOnly,
                             onChanged: (val) {
                               item.name = val;
                               _hasChanges = true;
@@ -362,6 +415,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                           flex: 2,
                           child: TextFormField(
                             initialValue: item.quantity.toString(),
+                            enabled: !_isReadOnly,
                             onChanged: (val) {
                               item.quantity = int.tryParse(val) ?? 1;
                               _hasChanges = true;
@@ -373,19 +427,21 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () => _removeClothingItem(idx),
-                        ),
+                        if (!_isReadOnly)
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () => _removeClothingItem(idx),
+                          ),
                       ],
                     ),
                   );
                 }),
-                TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Item'),
-                  onPressed: _addClothingItem,
-                ),
+                if (!_isReadOnly)
+                  TextButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Item'),
+                    onPressed: _addClothingItem,
+                  ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -394,10 +450,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                         'Due Date: ${DateFormat.yMMMd().format(_dueDate)}',
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () => _selectDueDate(context),
-                      child: const Text('Select Date'),
-                    ),
+                    if (!_isReadOnly)
+                      ElevatedButton(
+                        onPressed: () => _selectDueDate(context),
+                        child: const Text('Select Date'),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -407,29 +464,37 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     labelText: 'Order Status',
                     border: OutlineInputBorder(),
                   ),
+                  // Disable dropdown if read only
+                  onChanged: _isReadOnly
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setState(() {
+                              _status = value;
+                              _hasChanges = true;
+                            });
+                          }
+                        },
                   items: OrderStatus.values.map((status) {
                     return DropdownMenuItem(
                       value: status,
                       child: Text(status.displayName),
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    if (value != null)
-                      setState(() {
-                        _status = value;
-                        _hasChanges = true;
-                      });
-                  },
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _saveOrder,
+                  onPressed: _isReadOnly ? null : _saveOrder,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
                   ),
-                  child: Text(_isEditing ? 'Update Order' : 'Save Order'),
+                  child: Text(
+                    _isEditing
+                        ? (_isReadOnly ? 'Locked (Trial Mode)' : 'Update Order')
+                        : 'Save Order',
+                  ),
                 ),
               ],
             ),

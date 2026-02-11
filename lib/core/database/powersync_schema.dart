@@ -17,7 +17,7 @@ const schema = Schema([
     Column.text('code'),
     Column.text('clothes'),
     Column.real('total_price'),
-    Column.integer('status'),
+    Column.text('status'),
     Column.text('due_date'),
     Column.text('created_at'),
     Column.text('updated_at'),
