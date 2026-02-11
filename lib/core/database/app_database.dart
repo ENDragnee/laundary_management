@@ -14,14 +14,58 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
+  // ==========================================
+  // LAUNDRY ORDERS CRUD
+  // ==========================================
+
   Stream<List<LaundryOrder>> watchAllOrders() {
-    return (select(laundryOrders)..orderBy([
-          (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
-        ]))
+    return (select(laundryOrders)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
         .watch();
   }
 
-  /// Real-time search across customer name, phone, and order code
+  /// Paginated Query with Offset
+  Stream<List<LaundryOrder>> watchOrdersPaged({
+    required int limit,
+    required int offset,
+    OrderStatus? filterStatus,
+    bool sortDescending = true,
+  }) {
+    final query = select(laundryOrders);
+
+    if (filterStatus != null) {
+      query.where((t) => t.status.equalsValue(filterStatus));
+    }
+
+    query.orderBy([
+      (t) => OrderingTerm(
+        expression: t.dueDate,
+        mode: sortDescending ? OrderingMode.desc : OrderingMode.asc,
+      ),
+    ]);
+
+    query.limit(limit, offset: offset);
+    return query.watch();
+  }
+
+  /// Get the total count of orders for a specific filter using selectOnly
+  Stream<int> watchOrderCount(OrderStatus? filterStatus) {
+    // Define the count expression
+    final countAmount = laundryOrders.id.count();
+    
+    // Create a selectOnly statement (more efficient for aggregates)
+    final query = selectOnly(laundryOrders)..addColumns([countAmount]);
+
+    if (filterStatus != null) {
+      query.where(laundryOrders.status.equalsValue(filterStatus));
+    }
+
+    // Map the result row to an integer
+    return query.map((row) => row.read(countAmount) ?? 0).watchSingle();
+  }
+
   Stream<List<LaundryOrder>> searchOrders(String query) {
     final sanitizedQuery = query.trim();
     if (sanitizedQuery.isEmpty) return watchAllOrders();
@@ -41,35 +85,32 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
-  /// Create a new order. PowerSync handles the background upload to Supabase.
-  Future<void> addOrder(LaundryOrdersCompanion entry) {
+  Future<int> addOrder(LaundryOrdersCompanion entry) {
     return into(laundryOrders).insert(entry);
   }
 
-  /// Update an existing order.
   Future<bool> updateOrder(LaundryOrdersCompanion entry) {
     return update(laundryOrders).replace(entry);
   }
 
-  /// Delete an order by UUID.
   Future<int> deleteOrder(String id) {
     return (delete(laundryOrders)..where((tbl) => tbl.id.equals(id))).go();
   }
 
+  // ==========================================
+  // LAUNDRY PROFILE
+  // ==========================================
+
   Future<Laundry?> getLaundryProfile(String userId) {
-    return (select(
-      laundries,
-    )..where((t) => t.id.equals(userId))).getSingleOrNull();
+    return (select(laundries)..where((t) => t.id.equals(userId)))
+        .getSingleOrNull();
   }
 
-  /// Watch the laundry profile for real-time Tier updates (e.g., TRIAL -> REGULAR)
   Stream<Laundry?> watchLaundryProfile(String userId) {
-    return (select(
-      laundries,
-    )..where((t) => t.id.equals(userId))).watchSingleOrNull();
+    return (select(laundries)..where((t) => t.id.equals(userId)))
+        .watchSingleOrNull();
   }
 
-  /// Update the shop profile (used during Onboarding)
   Future<bool> updateLaundryProfile(LaundriesCompanion entry) {
     return update(laundries).replace(entry);
   }

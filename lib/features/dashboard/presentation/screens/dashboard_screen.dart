@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:laundary_management/core/constants/order_status.dart';
 import 'package:laundary_management/core/database/app_database.dart';
-import 'package:laundary_management/core/theme/theme_manager.dart';
+import 'package:laundary_management/features/dashboard/presentation/controller/dashboard_controller.dart';
 import 'package:laundary_management/features/dashboard/presentation/widgets/order_list_item.dart';
-import 'package:laundary_management/features/dashboard/presentation/widgets/user_profile_drawer.dart'; // Import
+import 'package:laundary_management/features/dashboard/presentation/widgets/page_navigator.dart';
+import 'package:laundary_management/features/dashboard/presentation/widgets/user_profile_drawer.dart';
 import 'package:powersync/powersync.dart' as ps;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:laundary_management/core/theme/theme_manager.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -16,58 +19,61 @@ class DashboardScreen extends StatelessWidget {
     final themeManager = context.read<ThemeManager>();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final database = context.read<AppDatabase>();
+    final controller = context.watch<DashboardController>();
     final powersync = context.read<ps.PowerSyncDatabase>();
     final user = Supabase.instance.client.auth.currentUser;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      drawer: const UserProfileDrawer(), // Redesigned Widget
+      drawer: const UserProfileDrawer(),
       appBar: AppBar(
         title: const Text('Laundry Manager'),
-        centerTitle: false,
+        elevation: 0,
         actions: [
-          // Sync Status Indicator
+          // Real-time Sync Indicator
           StreamBuilder<ps.SyncStatus>(
             stream: powersync.statusStream,
             builder: (context, snapshot) {
               final status = snapshot.data;
-              Color color = Colors.grey;
-              String label = 'Offline';
+              Color statusColor = Colors.grey;
+              String statusLabel = 'Offline';
 
               if (status != null && status.connected) {
                 if (status.uploading || status.downloading) {
-                  color = Colors.orange;
-                  label = 'Syncing';
+                  statusColor = Colors.orange;
+                  statusLabel = 'Syncing';
                 } else {
-                  color = Colors.green;
-                  label = 'Online';
+                  statusColor = Colors.green;
+                  statusLabel = 'Online';
                 }
               }
 
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
+                padding: const EdgeInsets.only(right: 12.0),
                 child: Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 10,
+                      height: 10,
                       decoration: BoxDecoration(
-                        color: color,
+                        color: statusColor,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          if (label == 'Syncing')
+                          if (statusLabel == 'Syncing')
                             BoxShadow(
-                              color: color.withValues(alpha: 0.5),
-                              blurRadius: 4,
+                              color: statusColor.withValues(alpha: 0.4),
+                              blurRadius: 6,
                               spreadRadius: 2,
                             ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      statusLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ],
@@ -76,66 +82,155 @@ class DashboardScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.push('/search'),
+            icon: Icon(
+              controller.isDescending
+                  ? Icons.sort_by_alpha
+                  : Icons.filter_list_alt,
+            ),
+            onPressed: () => controller.toggleSort(),
+            tooltip: 'Sort Orders',
           ),
           IconButton(
             icon: Icon(
-              isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
             ),
             onPressed: () => themeManager.toggleTheme(!isDarkMode),
           ),
         ],
       ),
-      body: StreamBuilder<Laundry?>(
-        stream: (database.select(
-          database.laundries,
-        )..where((t) => t.id.equals(user?.id ?? ''))).watchSingleOrNull(),
-        builder: (context, profileSnapshot) {
-          final tier = profileSnapshot.data?.tier ?? 'TRIAL';
-
-          return StreamBuilder<List<LaundryOrder>>(
-            stream: database.watchAllOrders(),
-            builder: (context, snapshot) {
-              final orders = snapshot.data ?? [];
-
-              if (orders.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.local_laundry_service_outlined,
-                        size: 64,
-                        color: Theme.of(context).disabledColor,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('No laundry orders yet.'),
-                    ],
+      body: Column(
+        children: [
+          // 1. Modern Filter Section
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  ActionChip(
+                    avatar: const Icon(Icons.search, size: 16),
+                    label: const Text('Search'),
+                    onPressed: () => context.push('/search'),
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   ),
-                );
-              }
+                  const SizedBox(width: 12),
+                  const VerticalDivider(width: 1),
+                  const SizedBox(width: 12),
+                  ChoiceChip(
+                    label: const Text('All Orders'),
+                    selected: controller.selectedStatus == null,
+                    onSelected: (_) => controller.setStatus(null),
+                  ),
+                  ...OrderStatus.values.map((status) {
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: ChoiceChip(
+                        label: Text(status.displayName),
+                        selected: controller.selectedStatus == status,
+                        onSelected: (_) => controller.setStatus(status),
+                        selectedColor: status.color.withValues(alpha: 0.15),
+                        checkmarkColor: status.color,
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
 
-              return ListView.builder(
-                padding: const EdgeInsets.only(bottom: 80, top: 8),
-                itemCount: orders.length,
-                itemBuilder: (context, index) {
-                  final order = orders[index];
-                  return OrderListItem(
-                    order: order,
-                    userTier: tier,
-                    onTap: () => context.push('/order_form', extra: order),
-                  );
-                },
-              );
-            },
-          );
-        },
+          // 2. Orders List Section
+          Expanded(
+            child: StreamBuilder<Laundry?>(
+              stream: database.watchLaundryProfile(user?.id ?? ''),
+              builder: (context, profileSnapshot) {
+                final tier = profileSnapshot.data?.tier ?? 'TRIAL';
+
+                return StreamBuilder<List<LaundryOrder>>(
+                  stream: database.watchOrdersPaged(
+                    limit: DashboardController.pageSize,
+                    offset: controller.offset,
+                    filterStatus: controller.selectedStatus,
+                    sortDescending: controller.isDescending,
+                  ),
+                  builder: (context, snapshot) {
+                    final orders = snapshot.data ?? [];
+
+                    if (snapshot.connectionState == ConnectionState.waiting &&
+                        orders.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (orders.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 48,
+                              color: theme.disabledColor,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No matching orders found.',
+                              style: TextStyle(color: theme.disabledColor),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: orders.length,
+                      itemBuilder: (context, index) {
+                        return OrderListItem(
+                          order: orders[index],
+                          userTier: tier,
+                          onTap: () =>
+                              context.push('/order_form', extra: orders[index]),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
+
+      // 3. FIXED: Page Navigator is now in bottomNavigationBar
+      // This prevents the FAB from overlapping the pagination UI
+      bottomNavigationBar: SafeArea(
+        child: StreamBuilder<int>(
+          stream: database.watchOrderCount(controller.selectedStatus),
+          builder: (context, snapshot) {
+            final count = snapshot.data ?? 0;
+            return PageNavigator(
+              currentPage: controller.currentPage,
+              totalCount: count,
+              pageSize: DashboardController.pageSize,
+              onPageChanged: (page) => controller.setPage(page),
+            );
+          },
+        ),
+      ),
+
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/order_form'),
         label: const Text('New Order'),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
+        elevation: 4,
       ),
     );
   }

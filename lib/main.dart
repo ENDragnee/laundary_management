@@ -6,6 +6,7 @@ import 'package:laundary_management/core/database/powersync_schema.dart';
 import 'package:laundary_management/core/navigation/app_router.dart';
 import 'package:laundary_management/core/theme/rose_pine_theme.dart';
 import 'package:laundary_management/core/theme/theme_manager.dart';
+import 'package:laundary_management/features/dashboard/presentation/controller/dashboard_controller.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:powersync/powersync.dart';
@@ -55,6 +56,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: themeManager),
         // Provide the Auth Notifier to the widget tree
         ChangeNotifierProvider.value(value: authNotifier),
+        ChangeNotifierProvider(create: (_) => DashboardController()),
       ],
       // Pass the notifier to MyApp so it can create the router
       child: MyApp(authNotifier: authNotifier),
