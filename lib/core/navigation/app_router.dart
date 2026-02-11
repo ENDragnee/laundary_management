@@ -6,6 +6,8 @@ import 'package:laundary_management/features/auth/presentation/screens/onboardin
 import 'package:laundary_management/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:laundary_management/features/laundry_order/presentation/screens/order_form_screen.dart';
 import 'package:laundary_management/features/search/presentation/screens/search_screen.dart';
+import 'package:laundary_management/features/profile/presentation/screens/shop_settings_screen.dart';
+import 'package:laundary_management/features/profile/presentation/screens/support_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // This notifier now holds the state, preventing redundant checks
@@ -92,6 +94,14 @@ GoRouter createAppRouter(AppAuthNotifier authNotifier) {
           final LaundryOrder? order = state.extra as LaundryOrder?;
           return OrderFormScreen(order: order);
         },
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const ShopSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        builder: (context, state) => const SupportScreen(),
       ),
     ],
   );

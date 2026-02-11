@@ -139,14 +139,17 @@ class UserProfileDrawer extends StatelessWidget {
                   label: 'Shop Settings',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/onboarding');
+                    context.push('/settings');
                   },
                   theme: theme,
                 ),
                 _buildDrawerItem(
                   icon: Icons.help_outline_rounded,
-                  label: 'Support',
-                  onTap: () {},
+                  label: 'Support & Upgrade',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.push('/support');
+                  },
                   theme: theme,
                 ),
               ],

@@ -52,6 +52,7 @@ dependencies:
   powersync: ^1.6.0
   drift_sqlite_async: ^0.2.0
   flutter_dotenv: ^5.2.1
+  url_launcher: ^6.3.0
 
   # For dependency injection/providing the database
   provider: ^6.1.2
