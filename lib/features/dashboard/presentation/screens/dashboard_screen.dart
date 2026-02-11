@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:laundary_management/core/database/app_database.dart';
 import 'package:laundary_management/core/theme/theme_manager.dart';
 import 'package:laundary_management/features/dashboard/presentation/widgets/order_list_item.dart';
+import 'package:laundary_management/features/dashboard/presentation/widgets/user_profile_drawer.dart'; // Import
 import 'package:powersync/powersync.dart' as ps;
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,32 +20,31 @@ class DashboardScreen extends StatelessWidget {
     final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
-      drawer: const UserProfileDrawer(),
+      drawer: const UserProfileDrawer(), // Redesigned Widget
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Laundry Manager'),
+        centerTitle: false,
         actions: [
+          // Sync Status Indicator
           StreamBuilder<ps.SyncStatus>(
             stream: powersync.statusStream,
             builder: (context, snapshot) {
               final status = snapshot.data;
               Color color = Colors.grey;
-              String label = 'Initializing';
+              String label = 'Offline';
 
-              if (status != null) {
-                if (!status.connected) {
-                  color = Colors.red;
-                  label = 'Offline';
-                } else if (status.uploading || status.downloading) {
+              if (status != null && status.connected) {
+                if (status.uploading || status.downloading) {
                   color = Colors.orange;
                   label = 'Syncing';
-                } else if (status.connected) {
+                } else {
                   color = Colors.green;
                   label = 'Online';
                 }
               }
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.only(right: 8.0),
                 child: Row(
                   children: [
                     Container(
@@ -66,8 +66,7 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       label,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -88,7 +87,6 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      // We wrap the list in a StreamBuilder to get the User Tier first
       body: StreamBuilder<Laundry?>(
         stream: (database.select(
           database.laundries,
@@ -119,13 +117,13 @@ class DashboardScreen extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.only(bottom: 80),
+                padding: const EdgeInsets.only(bottom: 80, top: 8),
                 itemCount: orders.length,
                 itemBuilder: (context, index) {
                   final order = orders[index];
                   return OrderListItem(
                     order: order,
-                    userTier: tier, // Pass tier to the item card
+                    userTier: tier,
                     onTap: () => context.push('/order_form', extra: order),
                   );
                 },
@@ -134,132 +132,10 @@ class DashboardScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/order_form'),
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class UserProfileDrawer extends StatelessWidget {
-  const UserProfileDrawer({super.key});
-
-  Future<void> _logout(BuildContext context) async {
-    final router = GoRouter.of(context);
-    final powersync = Provider.of<ps.PowerSyncDatabase>(context, listen: false);
-
-    await powersync.disconnect();
-    await Supabase.instance.client.auth.signOut();
-    router.go('/login');
-  }
-
-  Color _getTierColor(String tier) {
-    switch (tier.toUpperCase()) {
-      case 'PREMIUM':
-        return Colors.purple;
-      case 'REGULAR':
-        return Colors.blue;
-      case 'TRIAL':
-      default:
-        return Colors.orange;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final user = Supabase.instance.client.auth.currentUser;
-    final email = user?.email ?? 'No Email';
-    final database = context.read<AppDatabase>();
-
-    return Drawer(
-      child: Column(
-        children: [
-          StreamBuilder<Laundry?>(
-            stream: (database.select(
-              database.laundries,
-            )..where((t) => t.id.equals(user?.id ?? ''))).watchSingleOrNull(),
-            builder: (context, snapshot) {
-              final laundry = snapshot.data;
-              final tier = laundry?.tier ?? 'TRIAL';
-              final name = laundry?.name ?? 'Laundry Shop';
-
-              return UserAccountsDrawerHeader(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: theme.colorScheme.primary,
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : 'L',
-                    style: TextStyle(
-                      color: theme.colorScheme.onPrimary,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
-                accountName: Text(
-                  name,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                accountEmail: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        email,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getTierColor(tier),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        tier,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined),
-            title: const Text('Profile Settings'),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/onboarding');
-            },
-          ),
-          const Spacer(),
-          const Divider(),
-          ListTile(
-            leading: Icon(Icons.logout, color: theme.colorScheme.error),
-            title: Text(
-              'Logout',
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-            onTap: () => _logout(context),
-          ),
-          const SizedBox(height: 20),
-        ],
+        label: const Text('New Order'),
+        icon: const Icon(Icons.add),
       ),
     );
   }
