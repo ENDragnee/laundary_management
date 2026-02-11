@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Laundary Management</string>
+	<string>Laundry Managment</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,39 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ======================================================= -->
+	<!-- 1. CUSTOM DEEP LINK CONFIGURATION (Matches Android)     -->
+	<!-- ======================================================= -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<!-- This matches your Android data scheme -->
+				<string>com.endragnee.laundarymanagement</string>
+			</array>
+		</dict>
+	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
+	<!-- ======================================================= -->
+
+	<!-- ======================================================= -->
+	<!-- 2. NOTIFICATIONS & PERMISSIONS                          -->
+	<!-- ======================================================= -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Permission strings (required by Apple even if handled by plugins) -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notifications to remind you about laundry due dates.</string>
+	<!-- ======================================================= -->
+
 </dict>
 </plist>
