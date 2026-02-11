@@ -111,7 +111,7 @@ class OrderListItem extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    DateFormat.MMMd().format(order.dueDate),
+                    DateFormat.MMMd().format(DateTime.parse(order.dueDate)),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],

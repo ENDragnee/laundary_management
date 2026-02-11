@@ -17,30 +17,33 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
-  // 1. Initialize Supabase with Deep Link Options
+  // 1. Initialize Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
     authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce, // Recommended for Mobile
+      authFlowType: AuthFlowType.pkce,
     ),
   );
 
-  // 2. Initialize PowerSync (Offline Database)
+  // 2. Initialize PowerSync
   final dir = await getApplicationDocumentsDirectory();
   final dbPath = join(dir.path, 'laundry_sync.db');
 
   final powerSyncDb = PowerSyncDatabase(schema: schema, path: dbPath);
   await powerSyncDb.initialize();
 
-  // 3. Connect PowerSync to Cloud
+  // 3. Connect PowerSync
   final connector = SupabaseConnector();
   powerSyncDb.connect(connector: connector);
 
-  // 4. Initialize Drift with PowerSync
+  // 4. Initialize Drift
   final database = AppDatabase(powerSyncDb);
 
-  // 5. Initialize Theme Service
+  // 5. Initialize Auth Notifier (for Router)
+  final authNotifier = AppAuthNotifier(database);
+
+  // 6. Theme
   final themeManager = ThemeManager();
   await themeManager.loadTheme();
 
@@ -50,25 +53,35 @@ Future<void> main() async {
         Provider<AppDatabase>.value(value: database),
         Provider<PowerSyncDatabase>.value(value: powerSyncDb),
         ChangeNotifierProvider.value(value: themeManager),
+        // Provide the Auth Notifier to the widget tree
+        ChangeNotifierProvider.value(value: authNotifier),
       ],
-      child: const MyApp(),
+      // Pass the notifier to MyApp so it can create the router
+      child: MyApp(authNotifier: authNotifier),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Now accepts the notifier instead of the database
+  final AppAuthNotifier authNotifier;
+
+  const MyApp({super.key, required this.authNotifier});
 
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
+
+    // Create the router using the notifier
+    final router = createAppRouter(authNotifier);
+
     return MaterialApp.router(
       title: 'Laundry Manager',
       debugShowCheckedModeBanner: false,
       theme: RosePineTheme.lightTheme,
       darkTheme: RosePineTheme.darkTheme,
       themeMode: themeManager.themeMode,
-      routerConfig: appRouter,
+      routerConfig: router,
     );
   }
 }

@@ -18,7 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen for Auth State changes (Detects Magic Link success)
     _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
       data,
     ) {
@@ -48,7 +47,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await Supabase.instance.client.auth.signInWithOtp(
         email: email,
-        // Ensure this exactly matches your Supabase Dashboard & AndroidManifest.xml
         emailRedirectTo: 'com.endragnee.laundarymanagement://login-callback',
       );
 
@@ -61,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (error) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${error.toString()}'),

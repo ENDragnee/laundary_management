@@ -6,7 +6,8 @@ import 'package:uuid/uuid.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [LaundryOrders])
+// FIX: Added 'Laundries' to the tables list
+@DriftDatabase(tables: [LaundryOrders, Laundries])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(ps.PowerSyncDatabase db) : super(SqliteAsyncDriftConnection(db));
 

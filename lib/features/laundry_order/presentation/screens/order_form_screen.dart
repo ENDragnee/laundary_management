@@ -7,7 +7,7 @@ import 'package:laundary_management/core/constants/order_status.dart';
 import 'package:laundary_management/core/database/app_database.dart';
 import 'package:laundary_management/features/laundry_order/presentation/models/clothing_item.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Needed for User ID
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class OrderFormScreen extends StatefulWidget {
@@ -39,7 +39,12 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     _priceController = TextEditingController(
       text: order?.totalPrice.toString() ?? '0.0',
     );
-    _dueDate = order?.dueDate ?? DateTime.now().add(const Duration(days: 3));
+
+    // FIX: Parse the String from DB into a DateTime object for the UI
+    _dueDate = order != null
+        ? DateTime.parse(order.dueDate)
+        : DateTime.now().add(const Duration(days: 3));
+
     _status = order != null
         ? OrderStatus.values[order.status]
         : OrderStatus.pending;
@@ -82,7 +87,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
       final messenger = ScaffoldMessenger.of(context);
       final router = GoRouter.of(context);
 
-      // 1. Get Current User ID (Required for Sync)
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId == null) {
         messenger.showSnackBar(
@@ -91,25 +95,27 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         return;
       }
 
-      // 2. Determine Order ID (UUID)
       final String orderId = _isEditing ? widget.order!.id : const Uuid().v4();
-
       final now = DateTime.now();
 
       final orderCompanion = LaundryOrdersCompanion(
         id: d.Value(orderId),
-        laundryId: d.Value(userId), // Link order to user
+        laundryId: d.Value(userId),
         customerName: d.Value(_nameController.text),
         phoneNumber: d.Value(_phoneController.text),
         clothes: d.Value(ClothingItem.encode(_clothingItems)),
         totalPrice: d.Value(double.tryParse(_priceController.text) ?? 0.0),
-        dueDate: d.Value(_dueDate),
+
+        // FIX: Convert DateTime objects to ISO8601 Strings for the Database
+        dueDate: d.Value(_dueDate.toIso8601String()),
         status: d.Value(_status.index),
         code: _isEditing
             ? d.Value(widget.order!.code)
             : d.Value(const Uuid().v4().substring(0, 6).toUpperCase()),
-        createdAt: _isEditing ? d.Value(widget.order!.createdAt) : d.Value(now),
-        updatedAt: d.Value(now),
+        createdAt: _isEditing
+            ? d.Value(widget.order!.createdAt)
+            : d.Value(now.toIso8601String()),
+        updatedAt: d.Value(now.toIso8601String()),
       );
 
       try {
@@ -131,22 +137,9 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
         router.pop();
       } catch (error) {
         if (!mounted) return;
-
-        // Handle Trial Limit Error specifically
-        if (error.toString().contains('Trial Limit Reached')) {
-          messenger.showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Trial limit reached. Please upgrade to add more orders.',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        } else {
-          messenger.showSnackBar(
-            SnackBar(content: Text('Failed to save order: $error')),
-          );
-        }
+        messenger.showSnackBar(
+          SnackBar(content: Text('Failed to save order: $error')),
+        );
       }
     }
   }
@@ -169,24 +162,14 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
               final router = GoRouter.of(context);
               final dialogNavigator = Navigator.of(ctx);
 
-              try {
-                // ID is now String, which matches our new Schema
-                await database.deleteOrder(widget.order!.id);
+              await database.deleteOrder(widget.order!.id);
+              if (!mounted) return;
 
-                if (!mounted) return;
-
-                dialogNavigator.pop();
-                router.pop();
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Order deleted successfully!')),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                dialogNavigator.pop();
-                messenger.showSnackBar(
-                  SnackBar(content: Text('Delete failed: $e')),
-                );
-              }
+              dialogNavigator.pop();
+              router.pop();
+              messenger.showSnackBar(
+                const SnackBar(content: Text('Order deleted successfully!')),
+              );
             },
             child: Text(
               'Delete',
@@ -198,7 +181,6 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
     );
   }
 
-  // ... (Helper methods for clothes: _addClothingItem, _removeClothingItem remain same)
   void _addClothingItem() {
     setState(() {
       _clothingItems.add(ClothingItem());
@@ -239,9 +221,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
           ),
         );
         if (!context.mounted) return;
-        if (shouldPop ?? false) {
-          context.pop();
-        }
+        if (shouldPop ?? false) context.pop();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -302,10 +282,7 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                               ClipboardData(text: widget.order!.code),
                             );
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Code copied to clipboard'),
-                                duration: Duration(seconds: 1),
-                              ),
+                              const SnackBar(content: Text('Code copied')),
                             );
                           },
                         ),
@@ -347,12 +324,10 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     decimal: true,
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    if (value == null || value.isEmpty)
                       return 'Please enter a price';
-                    }
-                    if (double.tryParse(value) == null) {
+                    if (double.tryParse(value) == null)
                       return 'Please enter a valid number';
-                    }
                     return null;
                   },
                 ),
@@ -439,12 +414,11 @@ class _OrderFormScreenState extends State<OrderFormScreen> {
                     );
                   }).toList(),
                   onChanged: (value) {
-                    if (value != null) {
+                    if (value != null)
                       setState(() {
                         _status = value;
                         _hasChanges = true;
                       });
-                    }
                   },
                 ),
                 const SizedBox(height: 32),

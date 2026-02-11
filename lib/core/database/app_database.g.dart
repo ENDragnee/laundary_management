@@ -97,33 +97,33 @@ class $LaundryOrdersTable extends LaundryOrders
     'dueDate',
   );
   @override
-  late final GeneratedColumn<DateTime> dueDate = GeneratedColumn<DateTime>(
+  late final GeneratedColumn<String> dueDate = GeneratedColumn<String>(
     'due_date',
     aliasedName,
     false,
-    type: DriftSqlType.dateTime,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
     'created_at',
     aliasedName,
     false,
-    type: DriftSqlType.dateTime,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
     'updated_at',
     aliasedName,
     false,
-    type: DriftSqlType.dateTime,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   @override
@@ -279,15 +279,15 @@ class $LaundryOrdersTable extends LaundryOrders
         data['${effectivePrefix}status'],
       )!,
       dueDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        DriftSqlType.string,
         data['${effectivePrefix}due_date'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        DriftSqlType.string,
         data['${effectivePrefix}created_at'],
       )!,
       updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
+        DriftSqlType.string,
         data['${effectivePrefix}updated_at'],
       )!,
     );
@@ -308,9 +308,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
   final String clothes;
   final double totalPrice;
   final int status;
-  final DateTime dueDate;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String dueDate;
+  final String createdAt;
+  final String updatedAt;
   const LaundryOrder({
     required this.id,
     required this.laundryId,
@@ -337,9 +337,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     map['clothes'] = Variable<String>(clothes);
     map['total_price'] = Variable<double>(totalPrice);
     map['status'] = Variable<int>(status);
-    map['due_date'] = Variable<DateTime>(dueDate);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['due_date'] = Variable<String>(dueDate);
+    map['created_at'] = Variable<String>(createdAt);
+    map['updated_at'] = Variable<String>(updatedAt);
     return map;
   }
 
@@ -375,9 +375,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       clothes: serializer.fromJson<String>(json['clothes']),
       totalPrice: serializer.fromJson<double>(json['totalPrice']),
       status: serializer.fromJson<int>(json['status']),
-      dueDate: serializer.fromJson<DateTime>(json['dueDate']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      dueDate: serializer.fromJson<String>(json['dueDate']),
+      createdAt: serializer.fromJson<String>(json['createdAt']),
+      updatedAt: serializer.fromJson<String>(json['updatedAt']),
     );
   }
   @override
@@ -392,9 +392,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
       'clothes': serializer.toJson<String>(clothes),
       'totalPrice': serializer.toJson<double>(totalPrice),
       'status': serializer.toJson<int>(status),
-      'dueDate': serializer.toJson<DateTime>(dueDate),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'dueDate': serializer.toJson<String>(dueDate),
+      'createdAt': serializer.toJson<String>(createdAt),
+      'updatedAt': serializer.toJson<String>(updatedAt),
     };
   }
 
@@ -407,9 +407,9 @@ class LaundryOrder extends DataClass implements Insertable<LaundryOrder> {
     String? clothes,
     double? totalPrice,
     int? status,
-    DateTime? dueDate,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    String? dueDate,
+    String? createdAt,
+    String? updatedAt,
   }) => LaundryOrder(
     id: id ?? this.id,
     laundryId: laundryId ?? this.laundryId,
@@ -503,9 +503,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   final Value<String> clothes;
   final Value<double> totalPrice;
   final Value<int> status;
-  final Value<DateTime> dueDate;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<String> dueDate;
+  final Value<String> createdAt;
+  final Value<String> updatedAt;
   final Value<int> rowid;
   const LaundryOrdersCompanion({
     this.id = const Value.absent(),
@@ -530,9 +530,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     required String clothes,
     required double totalPrice,
     this.status = const Value.absent(),
-    required DateTime dueDate,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    required String dueDate,
+    required String createdAt,
+    required String updatedAt,
     this.rowid = const Value.absent(),
   }) : laundryId = Value(laundryId),
        customerName = Value(customerName),
@@ -551,9 +551,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Expression<String>? clothes,
     Expression<double>? totalPrice,
     Expression<int>? status,
-    Expression<DateTime>? dueDate,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
+    Expression<String>? dueDate,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -581,9 +581,9 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
     Value<String>? clothes,
     Value<double>? totalPrice,
     Value<int>? status,
-    Value<DateTime>? dueDate,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<String>? dueDate,
+    Value<String>? createdAt,
+    Value<String>? updatedAt,
     Value<int>? rowid,
   }) {
     return LaundryOrdersCompanion(
@@ -630,13 +630,13 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
       map['status'] = Variable<int>(status.value);
     }
     if (dueDate.present) {
-      map['due_date'] = Variable<DateTime>(dueDate.value);
+      map['due_date'] = Variable<String>(dueDate.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<String>(createdAt.value);
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<String>(updatedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -664,15 +664,430 @@ class LaundryOrdersCompanion extends UpdateCompanion<LaundryOrder> {
   }
 }
 
+class $LaundriesTable extends Laundries
+    with TableInfo<$LaundriesTable, Laundry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LaundriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _phoneNumberMeta = const VerificationMeta(
+    'phoneNumber',
+  );
+  @override
+  late final GeneratedColumn<String> phoneNumber = GeneratedColumn<String>(
+    'phone_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+    'tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('TRIAL'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<String> updatedAt = GeneratedColumn<String>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    phoneNumber,
+    tier,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'laundries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Laundry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('phone_number')) {
+      context.handle(
+        _phoneNumberMeta,
+        phoneNumber.isAcceptableOrUnknown(
+          data['phone_number']!,
+          _phoneNumberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+        _tierMeta,
+        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Laundry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Laundry(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      phoneNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone_number'],
+      ),
+      tier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tier'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_at'],
+      ),
+    );
+  }
+
+  @override
+  $LaundriesTable createAlias(String alias) {
+    return $LaundriesTable(attachedDatabase, alias);
+  }
+}
+
+class Laundry extends DataClass implements Insertable<Laundry> {
+  final String id;
+  final String? name;
+  final String? phoneNumber;
+  final String tier;
+  final String? createdAt;
+  final String? updatedAt;
+  const Laundry({
+    required this.id,
+    this.name,
+    this.phoneNumber,
+    required this.tier,
+    this.createdAt,
+    this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    if (!nullToAbsent || phoneNumber != null) {
+      map['phone_number'] = Variable<String>(phoneNumber);
+    }
+    map['tier'] = Variable<String>(tier);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<String>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<String>(updatedAt);
+    }
+    return map;
+  }
+
+  LaundriesCompanion toCompanion(bool nullToAbsent) {
+    return LaundriesCompanion(
+      id: Value(id),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      phoneNumber: phoneNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phoneNumber),
+      tier: Value(tier),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory Laundry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Laundry(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String?>(json['name']),
+      phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
+      tier: serializer.fromJson<String>(json['tier']),
+      createdAt: serializer.fromJson<String?>(json['createdAt']),
+      updatedAt: serializer.fromJson<String?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String?>(name),
+      'phoneNumber': serializer.toJson<String?>(phoneNumber),
+      'tier': serializer.toJson<String>(tier),
+      'createdAt': serializer.toJson<String?>(createdAt),
+      'updatedAt': serializer.toJson<String?>(updatedAt),
+    };
+  }
+
+  Laundry copyWith({
+    String? id,
+    Value<String?> name = const Value.absent(),
+    Value<String?> phoneNumber = const Value.absent(),
+    String? tier,
+    Value<String?> createdAt = const Value.absent(),
+    Value<String?> updatedAt = const Value.absent(),
+  }) => Laundry(
+    id: id ?? this.id,
+    name: name.present ? name.value : this.name,
+    phoneNumber: phoneNumber.present ? phoneNumber.value : this.phoneNumber,
+    tier: tier ?? this.tier,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
+  Laundry copyWithCompanion(LaundriesCompanion data) {
+    return Laundry(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      phoneNumber: data.phoneNumber.present
+          ? data.phoneNumber.value
+          : this.phoneNumber,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Laundry(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('phoneNumber: $phoneNumber, ')
+          ..write('tier: $tier, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, phoneNumber, tier, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Laundry &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.phoneNumber == this.phoneNumber &&
+          other.tier == this.tier &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LaundriesCompanion extends UpdateCompanion<Laundry> {
+  final Value<String> id;
+  final Value<String?> name;
+  final Value<String?> phoneNumber;
+  final Value<String> tier;
+  final Value<String?> createdAt;
+  final Value<String?> updatedAt;
+  final Value<int> rowid;
+  const LaundriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LaundriesCompanion.insert({
+    required String id,
+    this.name = const Value.absent(),
+    this.phoneNumber = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id);
+  static Insertable<Laundry> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? phoneNumber,
+    Expression<String>? tier,
+    Expression<String>? createdAt,
+    Expression<String>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (tier != null) 'tier': tier,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LaundriesCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? name,
+    Value<String?>? phoneNumber,
+    Value<String>? tier,
+    Value<String?>? createdAt,
+    Value<String?>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LaundriesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      tier: tier ?? this.tier,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (phoneNumber.present) {
+      map['phone_number'] = Variable<String>(phoneNumber.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<String>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<String>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LaundriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('phoneNumber: $phoneNumber, ')
+          ..write('tier: $tier, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $LaundryOrdersTable laundryOrders = $LaundryOrdersTable(this);
+  late final $LaundriesTable laundries = $LaundriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [laundryOrders];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    laundryOrders,
+    laundries,
+  ];
 }
 
 typedef $$LaundryOrdersTableCreateCompanionBuilder =
@@ -685,9 +1100,9 @@ typedef $$LaundryOrdersTableCreateCompanionBuilder =
       required String clothes,
       required double totalPrice,
       Value<int> status,
-      required DateTime dueDate,
-      required DateTime createdAt,
-      required DateTime updatedAt,
+      required String dueDate,
+      required String createdAt,
+      required String updatedAt,
       Value<int> rowid,
     });
 typedef $$LaundryOrdersTableUpdateCompanionBuilder =
@@ -700,9 +1115,9 @@ typedef $$LaundryOrdersTableUpdateCompanionBuilder =
       Value<String> clothes,
       Value<double> totalPrice,
       Value<int> status,
-      Value<DateTime> dueDate,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<String> dueDate,
+      Value<String> createdAt,
+      Value<String> updatedAt,
       Value<int> rowid,
     });
 
@@ -755,17 +1170,17 @@ class $$LaundryOrdersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get dueDate => $composableBuilder(
+  ColumnFilters<String> get dueDate => $composableBuilder(
     column: $table.dueDate,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+  ColumnFilters<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+  ColumnFilters<String> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
@@ -820,17 +1235,17 @@ class $$LaundryOrdersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get dueDate => $composableBuilder(
+  ColumnOrderings<String> get dueDate => $composableBuilder(
     column: $table.dueDate,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+  ColumnOrderings<String> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
@@ -875,13 +1290,13 @@ class $$LaundryOrdersTableAnnotationComposer
   GeneratedColumn<int> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get dueDate =>
+  GeneratedColumn<String> get dueDate =>
       $composableBuilder(column: $table.dueDate, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumn<String> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumn<String> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
@@ -924,9 +1339,9 @@ class $$LaundryOrdersTableTableManager
                 Value<String> clothes = const Value.absent(),
                 Value<double> totalPrice = const Value.absent(),
                 Value<int> status = const Value.absent(),
-                Value<DateTime> dueDate = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<String> dueDate = const Value.absent(),
+                Value<String> createdAt = const Value.absent(),
+                Value<String> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LaundryOrdersCompanion(
                 id: id,
@@ -952,9 +1367,9 @@ class $$LaundryOrdersTableTableManager
                 required String clothes,
                 required double totalPrice,
                 Value<int> status = const Value.absent(),
-                required DateTime dueDate,
-                required DateTime createdAt,
-                required DateTime updatedAt,
+                required String dueDate,
+                required String createdAt,
+                required String updatedAt,
                 Value<int> rowid = const Value.absent(),
               }) => LaundryOrdersCompanion.insert(
                 id: id,
@@ -995,10 +1410,227 @@ typedef $$LaundryOrdersTableProcessedTableManager =
       LaundryOrder,
       PrefetchHooks Function()
     >;
+typedef $$LaundriesTableCreateCompanionBuilder =
+    LaundriesCompanion Function({
+      required String id,
+      Value<String?> name,
+      Value<String?> phoneNumber,
+      Value<String> tier,
+      Value<String?> createdAt,
+      Value<String?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LaundriesTableUpdateCompanionBuilder =
+    LaundriesCompanion Function({
+      Value<String> id,
+      Value<String?> name,
+      Value<String?> phoneNumber,
+      Value<String> tier,
+      Value<String?> createdAt,
+      Value<String?> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LaundriesTableFilterComposer
+    extends Composer<_$AppDatabase, $LaundriesTable> {
+  $$LaundriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LaundriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LaundriesTable> {
+  $$LaundriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LaundriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LaundriesTable> {
+  $$LaundriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get phoneNumber => $composableBuilder(
+    column: $table.phoneNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<String> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LaundriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LaundriesTable,
+          Laundry,
+          $$LaundriesTableFilterComposer,
+          $$LaundriesTableOrderingComposer,
+          $$LaundriesTableAnnotationComposer,
+          $$LaundriesTableCreateCompanionBuilder,
+          $$LaundriesTableUpdateCompanionBuilder,
+          (Laundry, BaseReferences<_$AppDatabase, $LaundriesTable, Laundry>),
+          Laundry,
+          PrefetchHooks Function()
+        > {
+  $$LaundriesTableTableManager(_$AppDatabase db, $LaundriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LaundriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LaundriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LaundriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LaundriesCompanion(
+                id: id,
+                name: name,
+                phoneNumber: phoneNumber,
+                tier: tier,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> name = const Value.absent(),
+                Value<String?> phoneNumber = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<String?> createdAt = const Value.absent(),
+                Value<String?> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LaundriesCompanion.insert(
+                id: id,
+                name: name,
+                phoneNumber: phoneNumber,
+                tier: tier,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LaundriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LaundriesTable,
+      Laundry,
+      $$LaundriesTableFilterComposer,
+      $$LaundriesTableOrderingComposer,
+      $$LaundriesTableAnnotationComposer,
+      $$LaundriesTableCreateCompanionBuilder,
+      $$LaundriesTableUpdateCompanionBuilder,
+      (Laundry, BaseReferences<_$AppDatabase, $LaundriesTable, Laundry>),
+      Laundry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$LaundryOrdersTableTableManager get laundryOrders =>
       $$LaundryOrdersTableTableManager(_db, _db.laundryOrders);
+  $$LaundriesTableTableManager get laundries =>
+      $$LaundriesTableTableManager(_db, _db.laundries);
 }
